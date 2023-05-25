@@ -1,0 +1,32 @@
+digraph 
+{
+  "D:\Repos\bug-riper\.hie\SortingNetwork.hie:vapply" [label="SortingNetwork.apply" fillcolor="red"]
+  "D:\Repos\bug-riper\.hie\SortingNetwork.hie:vapplyGates" [label="SortingNetwork.applyGates" fillcolor="red"]
+  "D:\Repos\bug-riper\.hie\SortingNetwork.hie:vsort" [label="SortingNetwork.sort" fillcolor="red"]
+  "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vcheckSingleDeclaration" [label="SourcePlugin.checkSingleDeclaration" fillcolor="red"]
+  "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vf" [label="SourcePlugin.f" fillcolor="red"]
+  "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vinterfaceLoadPlugin" [label="SourcePlugin.interfaceLoadPlugin" fillcolor="red"]
+  "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vmetaPlugin" [label="SourcePlugin.metaPlugin" fillcolor="red"]
+  "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vparsedPlugin" [label="SourcePlugin.parsedPlugin" fillcolor="red"]
+  "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vplugin" [label="SourcePlugin.plugin" fillcolor="red"]
+  "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vprintBind" [label="SourcePlugin.printBind" fillcolor="red"]
+  "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vrenamedAction" [label="SourcePlugin.renamedAction" fillcolor="red"]
+  "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vshowAll" [label="SourcePlugin.showAll" fillcolor="red"]
+  "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vshowLocated" [label="SourcePlugin.showLocated" fillcolor="red"]
+  "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vtypecheckPlugin" [label="SourcePlugin.typecheckPlugin" fillcolor="red"]
+  "D:\Repos\bug-riper\.hie\SortingNetwork.hie:vapply" -> "D:\Repos\bug-riper\.hie\SortingNetwork.hie:vapply"
+  "D:\Repos\bug-riper\.hie\SortingNetwork.hie:vapplyGates" -> "D:\Repos\bug-riper\.hie\SortingNetwork.hie:vapply"
+  "D:\Repos\bug-riper\.hie\SortingNetwork.hie:vapplyGates" -> "D:\Repos\bug-riper\.hie\SortingNetwork.hie:vapplyGates"
+  "D:\Repos\bug-riper\.hie\SortingNetwork.hie:vsort" -> "D:\Repos\bug-riper\.hie\SortingNetwork.hie:vapplyGates"
+  "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vcheckSingleDeclaration" -> "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vf"
+  "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vf" -> "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vf"
+  "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vf" -> "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vprintBind"
+  "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vparsedPlugin" -> "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vshowAll"
+  "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vplugin" -> "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vinterfaceLoadPlugin"
+  "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vplugin" -> "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vmetaPlugin"
+  "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vplugin" -> "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vparsedPlugin"
+  "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vplugin" -> "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vrenamedAction"
+  "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vplugin" -> "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vtypecheckPlugin"
+  "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vshowAll" -> "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vshowLocated"
+  "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vshowLocated" -> "D:\Repos\bug-riper\.hie\SourcePlugin.hie:vcheckSingleDeclaration"
+}
