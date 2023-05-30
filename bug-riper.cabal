@@ -22,7 +22,7 @@ common warnings
     ghc-options: -fwrite-ide-info
                  -hiedir=.hie
                  -Wall 
-                 -fhpc
+                 --fhpc
 
 executable bug-riper
     -- Import common warning flags.
@@ -33,10 +33,11 @@ executable bug-riper
 
     -- Modules included in this executable, other than Main.
     other-modules:    
-        SourcePlugin
-        SortingNetwork
-        HieReader
+        --SourcePlugin
+        --SortingNetwork
+        --HieReader
         HieGraphGenerator
+        HieDUGraphGenerator
         Sample
 
     -- LANGUAGE extensions used by modules in this package.

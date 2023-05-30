@@ -1,8 +1,8 @@
 module Main where
 
-import HieGraphGenerator
-import qualified Sample as A
+import HieDUGraphGenerator
 
-main = A.main
---    output <- analyze "./.hie/Sample.hie"
---   writeFile "out.txt" output
+main :: IO()
+main = do
+    output <- analyze "./.hie/Sample.hie"
+    writeFile "out.txt" output
