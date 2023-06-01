@@ -22,7 +22,7 @@ common warnings
     ghc-options: -fwrite-ide-info
                  -hiedir=.hie
                  -Wall 
-                 --fhpc
+                 -fhpc
 
 executable bug-riper
     -- Import common warning flags.

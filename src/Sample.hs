@@ -1,17 +1,21 @@
 module Sample where
 
-a :: Int
-a = 10
+a :: Bool
+a = True
 
-f a = if b == False then a else 0
-    where b = a > 10
-f 1 = case a of 10 -> 1 
+f :: Int -> Int
+f a = if a > 10 then b else c
+    where 
+        b = if a < 20 then 1 else -1
+        c = g a 0
+f a = case a of 10 -> 1 
                 _ -> 0
-g a b = a
+
+g a b = if a < 0 then 1 else -1
 m (a:ax) = a
 
 main :: IO ()
-main = print $ f a
+main = print $ f 10
 
 -- FunBind
 -- HsIf

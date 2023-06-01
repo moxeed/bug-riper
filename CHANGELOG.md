@@ -13,3 +13,11 @@ g2 -> symbolic execution -> reuse the process
 manual annotation with monad (sorting network) 
 1 -> Measure Def Use Coverage
 2 -> Automation HTS
+
+
+# How To Install G2
+
+Only Runs On GHC 8.2.2
+If You Want to Use Multiple GHC Version Specify The Version Using -W Option In Cabal This Option Should Be Provided With The Path of Your GHC Version
+
+cabal install g2 -w D:\ghc\ghc-8.2.2\bin\ghc.exe --constraint 'liquid-fixpoint < 0.8.10'
