@@ -10,6 +10,8 @@ import qualified Data.Map as M
 import qualified Data.Set as S
 import qualified Data.List as L
 
+import Debug.Trace
+
 data AST = AST Span String [AST] [String]
   deriving (Show)
 
@@ -80,7 +82,7 @@ convertToDefUse (AST _ "ParPat" children _) defUse = foldr convertToDefUse defUs
 convertToDefUse _ defUse = defUse
 
 convertToDefUses :: AST -> DefUse
-convertToDefUses (AST s _ children _) = foldr convertToDefUse (DefUse s [] [] []) children
+convertToDefUses (AST s _ children _) = trace "hello" (foldr convertToDefUse (DefUse s [] [] []) children)
 
 analyzeAsts :: HieFileResult -> String
 analyzeAsts hieFileResult = show $ fmap (convertToDefUses . analyzeAst) asts
