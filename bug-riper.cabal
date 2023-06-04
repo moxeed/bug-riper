@@ -1,13 +1,6 @@
 cabal-version:      3.0
 name:               bug-riper
 
--- The package version.
--- See the Haskell package versioning policy (PVP) for standards
--- guiding when and how versions should be incremented.
--- https://pvp.haskell.org
--- PVP summary:     +-+------- breaking API changes
---                  | | +----- non-breaking API additions
---                  | | | +--- code changes with no API change
 version:            0.1.0.0
 license:            MIT
 license-file:       LICENSE
@@ -17,61 +10,55 @@ category:           Language
 build-type:         Simple
 extra-doc-files:    CHANGELOG.md
 
+common instrumentation
+    ghc-options: -fwrite-ide-info
+                 -hiedir=.hie
+                 -Wall 
+                 --fhpc
+                 -fplugin=Instrumentation
+    build-depends: plugin-lib
 
 common warnings
     ghc-options: -fwrite-ide-info
                  -hiedir=.hie
                  -Wall 
                  --fhpc
-                 -fplugin=Trace
-    build-depends:  graph-trace, plugin-lib
 
 executable bug-riper
-    -- Import common warning flags.
     import:           warnings
-
-    -- .hs or .lhs file containing the Main module.
     main-is:          Main.hs
-
-    -- Modules included in this executable, other than Main.
     other-modules:    
-        --SourcePlugin
         --SortingNetwork
         --HieReader
-        HieGraphGenerator
-        HieDUGraphGenerator
+
+    build-depends:
+        base ^>=4.17,
+        main-lib
+    hs-source-dirs:   
+        src
+        app
+    default-language: Haskell2010
+
+library main-lib
+    import: instrumentation
+    exposed-modules: 
+        BasicSum
+        DUEffect
         Sample
-
-    -- LANGUAGE extensions used by modules in this package.
-    -- other-extensions:
-
-    -- Other library packages from which modules are imported.
-    build-depends:    
+        --HieGraphGenerator
+        --HieDUGraphGenerator
+    hs-source-dirs: lib
+    build-depends: 
         base ^>=4.17,
         ghc  ^>=9.4.2,
         containers,
         ghc-paths,
         mtl
-
-    -- Directories containing source files.
-    hs-source-dirs:   
-        src
-        app
-
-    -- Base language which the package is written in.
-    default-language: Haskell2010
-
-library basic-sum-lib
-    import: warnings
-    exposed-modules: 
-        BasicSum
-        DUEffect
-    hs-source-dirs: lib
-    build-depends: base ^>=4.17
     default-language: Haskell2010
 
 library plugin-lib
     exposed-modules: 
+        SourcePlugin
         Instrumentation
     hs-source-dirs: plugin
     build-depends: base

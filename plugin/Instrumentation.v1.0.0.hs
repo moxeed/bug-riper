@@ -1,5 +1,7 @@
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Instrumentation ( plugin ) where
 
@@ -56,19 +58,39 @@ pluginImpl :: GHC.ModSummary -> GHC.TcGblEnv -> GHC.TcM GHC.TcGblEnv
 pluginImpl ms tcGblEnv = do
   let tcg_binds = GHC.tcg_binds tcGblEnv
   new_tcg_binds <- mkM addTrace `everywhereM` tcg_binds
-  liftIO $ putStrLn $ GHC.renderWithContext GHC.defaultSDocContext $ GHC.ppr tcg_binds
-  liftIO $ putStrLn $ GHC.renderWithContext GHC.defaultSDocContext $ GHC.ppr new_tcg_binds
+  --liftIO $ putStrLn $ GHC.renderWithContext GHC.defaultSDocContext $ GHC.ppr new_tcg_binds
   return tcGblEnv { GHC.tcg_binds = new_tcg_binds}
 
-addTrace :: GHC.LHsExpr GHC.GhcTc -> GHC.TcM (GHC.LHsExpr GHC.GhcTc)
-addTrace (GHC.L loc (GHC.HsIf p cond first second)) = do
-  new_cond <- injectTrace cond
-  new_first <- injectTrace first
-  new_second <- injectTrace second
-  return (GHC.L loc (GHC.HsIf p new_cond new_first new_second))
+applyMatch :: GHC.LMatch GHC.GhcTc (GHC.LHsExpr GHC.GhcTc) -> GHC.TcM (GHC.LMatch GHC.GhcTc (GHC.LHsExpr GHC.GhcTc))
+applyMatch (GHC.L loc match@GHC.Match{GHC.m_grhss=(GHC.GRHSs a grhssGRHSs grhssLocalBinds)}) = do
+      new_grhssGRHSs <- mkM applyGRHS `everywhereM` grhssGRHSs
+      return (GHC.L loc match{GHC.m_grhss=(GHC.GRHSs a new_grhssGRHSs grhssLocalBinds)})
 
-addTrace other = 
-  return other
+applyGRHS :: GHC.LGRHS GHC.GhcTc (GHC.LHsExpr GHC.GhcTc) -> GHC.TcM (GHC.LGRHS GHC.GhcTc (GHC.LHsExpr GHC.GhcTc))
+applyGRHS (GHC.L loc (GHC.GRHS a b body)) = do
+  new_body <- (trace "BodyChanged" injectTrace body)
+  return (trace (GHC.renderWithContext GHC.defaultSDocContext $ GHC.ppr new_body) GHC.L loc (GHC.GRHS a b new_body))
+
+addTrace :: GHC.LHsBind GHC.GhcTc -> GHC.TcM (GHC.LHsBind GHC.GhcTc)
+addTrace (GHC.L span fun@GHC.FunBind{GHC.fun_matches=fun_matches}) = do
+    new_matches <- mkM applyMatch `everywhereM` matches
+    return (GHC.L span fun{GHC.fun_matches=fun_matches{GHC.mg_alts=GHC.L innerSpan new_matches}})
+  where 
+    GHC.L innerSpan matches = GHC.mg_alts fun_matches
+
+addTrace (GHC.L loc (GHC.XHsBindsLR bind@GHC.AbsBinds{GHC.abs_binds=abs_binds})) = do
+  new_abs_binds <- mkM addTrace `everywhereM` abs_binds
+  return (trace "XHsBindsLR" GHC.L loc (GHC.XHsBindsLR bind{GHC.abs_binds=new_abs_binds}))
+
+addTrace typeChecked@(GHC.L loc a@GHC.PatBind{}) = 
+  return (trace "PatBind" typeChecked)
+
+addTrace typeChecked@(GHC.L loc a@GHC.PatSynBind{}) = 
+  return (trace "PatSynBind" typeChecked)
+  
+addTrace typeChecked = do 
+  return (trace "OtherType" typeChecked)
+
 
 injectTrace :: GHC.LHsExpr GHC.GhcTc -> GHC.TcM (GHC.LHsExpr GHC.GhcTc)
 injectTrace expr@(GHC.L loc _) = do
@@ -94,7 +116,7 @@ injectTrace expr@(GHC.L loc _) = do
     GHC.captureConstraints
     ( GHC.tcMonoExpr
       traceExprRn
-      ( GHC.Check ( GHC.mkVisFunTyMany exprT exprT ) )
+      ( GHC.Check ( GHC.mkInvisFunTy exprT exprT exprT ) )
     )
 
   -- Solve wanted constraints and build a wrapper.
@@ -115,14 +137,11 @@ injectTrace expr@(GHC.L loc _) = do
   newBody <-
     GHC.zonkTopLExpr
       ( GHC.mkHsApp
-        ( GHC.mkLHsWrap wrapper traceExprTc )
-        expr
+          ( GHC.mkLHsWrap wrapper traceExprTc )
+          ( GHC.mkHsPar expr )
       )
 
   return newBody
-
-injectTrace other = 
-  return other
 
 typeOfExpr :: GHC.LHsExpr GHC.GhcTc -> GHC.TcM ( Maybe GHC.Type )
 typeOfExpr e = do
