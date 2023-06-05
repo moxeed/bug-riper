@@ -27,10 +27,6 @@ common warnings
 executable bug-riper
     import:           warnings
     main-is:          Main.hs
-    other-modules:    
-        --SortingNetwork
-        --HieReader
-
     build-depends:
         base ^>=4.17,
         main-lib
@@ -63,6 +59,7 @@ library main-lib
         BasicSum
         DUEffect
         Sample
+        SortingNetwork
     hs-source-dirs: lib
     build-depends: 
         base ^>=4.17
