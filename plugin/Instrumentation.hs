@@ -61,10 +61,9 @@ pluginImpl ms tcGblEnv = do
 
 addExprTrace :: GHC.LHsExpr GHC.GhcTc -> GHC.TcM (GHC.LHsExpr GHC.GhcTc)
 addExprTrace (GHC.L loc (GHC.HsIf p cond first second)) = do
-  new_cond <- injectTrace cond
   new_first <- injectTrace first
   new_second <- injectTrace second
-  return (GHC.L loc (GHC.HsIf p new_cond new_first new_second))
+  return (GHC.L loc (GHC.HsIf p cond new_first new_second))
 
 addExprTrace other = 
   return other
@@ -121,10 +120,12 @@ injectTrace expr@(GHC.L loc _) = do
   -- diagnostic function with the necessary arguments.
   newBody <-
     GHC.zonkTopLExpr
+    ( GHC.mkHsPar
       ( GHC.mkHsApp
         ( GHC.mkLHsWrap wrapper traceExprTc )
-        expr
+        ( GHC.mkHsPar expr )
       )
+    )
 
   return newBody
 

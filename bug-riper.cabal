@@ -39,21 +39,33 @@ executable bug-riper
         app
     default-language: Haskell2010
 
+executable analyze
+    import:           warnings
+    main-is:          Main.hs
+    other-modules:
+        HieASTGraphGenerator
+        HieDUGraphGenerator 
+        HieDUJungleGenerator 
+    build-depends:
+        main-lib,
+        base ^>=4.17,
+        ghc  ^>=9.4.2,
+        containers,
+        ghc-paths,
+        mtl
+    hs-source-dirs:   
+        analyze
+    default-language: Haskell2010
+
 library main-lib
     import: instrumentation
     exposed-modules: 
         BasicSum
         DUEffect
         Sample
-        --HieGraphGenerator
-        --HieDUGraphGenerator
     hs-source-dirs: lib
     build-depends: 
-        base ^>=4.17,
-        ghc  ^>=9.4.2,
-        containers,
-        ghc-paths,
-        mtl
+        base ^>=4.17
     default-language: Haskell2010
 
 library plugin-lib
@@ -76,6 +88,6 @@ test-suite tests
     other-modules:
         BasicSumTest
         DUEffectTest
-    build-depends: base ^>=4.17, HUnit ^>=1.6, basic-sum-lib
+    build-depends: base ^>=4.17, HUnit ^>=1.6, main-lib
     hs-source-dirs: tests
     default-language: Haskell2010

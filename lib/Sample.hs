@@ -1,10 +1,12 @@
 module Sample where
 
+g = 1
+
 z :: Int -> Int
 z a = (z' a) +  (z'' a) + (z''' a)
 
 z' :: Int -> Int
-z' a = if a > 2 then 1 else -1
+z' a = if a > 2 then a else a
 
 z'' :: Int -> Int
 z'' 1 = 2
@@ -16,3 +18,7 @@ z''' a = case a of
     1 -> 2
     2 -> 3
     _ -> 0
+
+
+--Cannot Do This Therefore All of Function Declarations Are In Same Fun Bind Block
+--z'' 4 = 5
