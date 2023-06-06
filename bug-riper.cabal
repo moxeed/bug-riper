@@ -25,7 +25,6 @@ common warnings
                  --fhpc
 
 executable bug-riper
-    import:           warnings
     main-is:          Main.hs
     build-depends:
         base ^>=4.17,

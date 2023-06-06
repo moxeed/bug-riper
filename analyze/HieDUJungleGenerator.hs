@@ -1,7 +1,6 @@
 module HieDUJungleGenerator
 where
 
-import Debug.Trace
 import GHC.Iface.Ext.Types
 import qualified Data.Map as M
 import qualified Data.List as L
@@ -12,7 +11,7 @@ data GraphNode = DefNode String [GraphNode] | UseNode Span [String] [GraphNode]
 
 convertToGraphNode :: AG.AST -> GraphNode -> GraphNode
 
-convertToGraphNode (AG.AST _ "VarPat"  _ [name]  ) (DefNode defName children) = trace name (DefNode defName ((DefNode name []):children))
+convertToGraphNode (AG.AST _ "VarPat"  _ [name]  ) (DefNode defName children) = DefNode defName ((DefNode name []):children)
 
 convertToGraphNode (AG.AST _ ""        _ [name]  ) (DefNode _ children) = DefNode name children
 convertToGraphNode (AG.AST _ "FunBind" children _) (DefNode name nodeChildren) = DefNode name (funcNode:nodeChildren)
@@ -26,7 +25,7 @@ convertToGraphNode (AG.AST s "HsIf"  [cond, first@(AG.AST fs _ _ _), second@(AG.
     secondNode = convertToGraphNode second (UseNode ss [] [])
     condNode = convertToGraphNode cond (UseNode s [] [firstNode, secondNode])
     
-convertToGraphNode (AG.AST s "GRHS"  [child]  _   ) graphNode = addChild graphNode (convertToGraphNode child (UseNode s [] []))
+convertToGraphNode (AG.AST _ "GRHS"  [child@(AG.AST s _ _ _)]  _   ) graphNode = addChild graphNode (convertToGraphNode child (UseNode s [] []))
 convertToGraphNode (AG.AST _ _     children _   )   graphNode = foldr convertToGraphNode graphNode children
 
 addChild :: GraphNode -> GraphNode -> GraphNode
@@ -46,14 +45,10 @@ createUseArray (UseNode s uses children) useArray  = (UseNode s uses []):childAr
   where childArray = foldr createUseArray useArray children
 createUseArray _ useArray = useArray
 
-
-printSpan :: Span -> String
-printSpan :: Span -> String
-
 createDefPath :: GraphNode -> [String]
-createDefPath (UseNode span uses children) = (printSpan span):(subPaths)
+createDefPath (UseNode span uses children) = (show span):(subPaths)
   where
-      subPaths = concat $ fmap ( fmap ((printSpan span ++ "->") ++) . createDefPath) children
+      subPaths = concat $ fmap ( fmap ((show span ++ "->") ++) . createDefPath) children
 createDefPath _ = []
 
 createUsePath :: M.Map String GraphNode -> GraphNode -> [String]
@@ -73,9 +68,15 @@ createDefUsePath node = concat $ fmap (createUsePath defMap) useArray
 convertToGraphNodeInit :: AG.AST -> GraphNode
 convertToGraphNodeInit ast = convertToGraphNode ast (DefNode "" [])
 
-analyze :: String -> IO (String)
-analyze file = do 
+uniq:: [String] -> [String]
+uniq (a:ax) = if elem a ax then uniq ax else a:(uniq ax)
+uniq [] = []
+
+analyze :: String -> String -> IO (String)
+analyze file runFile = do 
   asts <- AG.loadAST file
-  --return $ show $ fmap (convertToGraphNodeInit) asts
-  return $ L.intercalate "\n" $ concat $ fmap (createDefUsePath . convertToGraphNodeInit) asts
-  --return $ show $ concat $ fmap ((\x -> createUseArray x []) . convertToGraphNode) asts
+  runData <- readFile runFile
+  let 
+    duPath = uniq $ concat $ fmap (createDefUsePath . convertToGraphNodeInit) asts
+    trace = L.intercalate "->" (lines runData)
+  return $ L.intercalate "\n" $ fmap (\x -> x ++ (if L.isInfixOf x trace then ":Covered" else ":NotCovered")) duPath
