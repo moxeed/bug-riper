@@ -79,4 +79,4 @@ analyze file runFile = do
   let 
     duPath = uniq $ concat $ fmap (createDefUsePath . convertToGraphNodeInit) asts
     trace = L.intercalate "->" (lines runData)
-  return $ L.intercalate "\n" $ fmap (\x -> (if L.isInfixOf x trace then "Covered: " else "NotCovered: ") ++ x ) duPath
+  return $ L.intercalate "\n" $ fmap (\x -> (if L.isInfixOf x trace then "\ESC[32mCovered: " else "\ESC[31mNotCovered: ") ++ x ) duPath
