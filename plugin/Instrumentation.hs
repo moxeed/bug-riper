@@ -7,7 +7,6 @@ module Instrumentation ( plugin ) where
 import Data.Traversable ( for )
 import Control.Monad.IO.Class ( liftIO )
 import Data.Foldable ( toList )
-import Debug.Trace ( trace )
 
 -- ghc
 import GHC.Data.Bag
@@ -20,6 +19,7 @@ import GHC.Rename.Expr
 import GHC.Tc.Gen.Expr
 import GHC.Iface.Env
 import GHC.Parser.Annotation
+import System.IO.Unsafe
 
 import qualified GHC
 import qualified GHC.ThToHs as GHC
@@ -44,6 +44,11 @@ import Data.Generics ( everywhereM, mkM )
 
 -- template-haskell
 import Language.Haskell.TH as TH
+
+trace :: String -> a -> a
+trace input body = unsafePerformIO $ do
+ appendFile "run.out" (input ++ "\n")
+ return body
 
 plugin :: GHC.Plugin
 plugin =
