@@ -22,3 +22,5 @@ z''' a = case a of
 
 --Cannot Do This Therefore All of Function Declarations Are In Same Fun Bind Block
 --z'' 4 = 5
+--z'  1 = 5
+--z'' 2 = 5

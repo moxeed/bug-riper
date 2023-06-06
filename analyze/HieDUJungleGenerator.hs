@@ -1,44 +1,37 @@
 module HieDUJungleGenerator
 where
 
+import Debug.Trace
 import GHC.Iface.Ext.Types
 import qualified Data.Map as M
 import qualified Data.List as L
 import qualified HieASTGraphGenerator as AG
 
-data GraphNode = DefNode String [GraphNode] | UseNode Span [String] [GraphNode] | FunName String | Null
+data GraphNode = DefNode String [GraphNode] | UseNode Span [String] [GraphNode]
   deriving (Show)
 
-convertToGraphNode :: AG.AST -> GraphNode
+convertToGraphNode :: AG.AST -> GraphNode -> GraphNode
 
-convertToGraphNode (AG.AST _ "VarPat"  _ [name]  ) = DefNode name []
+convertToGraphNode (AG.AST _ "VarPat"  _ [name]  ) (DefNode defName children) = trace name (DefNode defName ((DefNode name []):children))
 
-convertToGraphNode (AG.AST _ ""        _ [name]  ) = FunName name
-convertToGraphNode (AG.AST _ "FunBind" children _) = foldr createFunDeclare (DefNode "" []) children
-convertToGraphNode (AG.AST _ "FunBind" children _) = foldr createFunDeclare (DefNode "" []) children
+convertToGraphNode (AG.AST _ ""        _ [name]  ) (DefNode _ children) = DefNode name children
+convertToGraphNode (AG.AST _ "FunBind" children _) (DefNode name nodeChildren) = DefNode name (funcNode:nodeChildren)
+  where funcNode = foldr convertToGraphNode (DefNode "" []) children
 
-convertToGraphNode (AG.AST s "HsVar" _        name) = UseNode s name []
-convertToGraphNode (AG.AST s "HsIf"  children _   ) = UseNode s [] (fmap convertToGraphNode children)
-convertToGraphNode (AG.AST s "GRHS"  [child]  _   ) = convertToGraphNode child
-convertToGraphNode (AG.AST s _       children _   ) = foldr createUseNode (UseNode s [] []) children
+convertToGraphNode (AG.AST _ "HsVar" _      [name]) (UseNode s uses children) = UseNode s (name:uses) children 
+convertToGraphNode (AG.AST s "HsIf"  [cond, first@(AG.AST fs _ _ _), second@(AG.AST ss _ _ _)] _ ) graphNode = 
+  addChild graphNode condNode
+  where 
+    firstNode  = convertToGraphNode first  (UseNode fs [] [])
+    secondNode = convertToGraphNode second (UseNode ss [] [])
+    condNode = convertToGraphNode cond (UseNode s [] [firstNode, secondNode])
+    
+convertToGraphNode (AG.AST s "GRHS"  [child]  _   ) graphNode = addChild graphNode (convertToGraphNode child (UseNode s [] []))
+convertToGraphNode (AG.AST _ _     children _   )   graphNode = foldr convertToGraphNode graphNode children
 
-createUseNode :: AG.AST -> GraphNode -> GraphNode
-createUseNode child use@(UseNode s uses children) =
-  case childNode of
-    UseNode _ newUses newChildren -> UseNode s (uses++newUses) (children++newChildren)
-    Null -> use
-    other -> UseNode s uses (other:children)
-  where childNode = convertToGraphNode child  
-createUseNode _ use = use
-
-createFunDeclare :: AG.AST -> GraphNode -> GraphNode
-createFunDeclare child def@(DefNode name children) =
-  case childNode of
-    FunName funName -> DefNode funName children
-    Null -> def
-    other -> DefNode name (other:children)
-  where childNode = convertToGraphNode child
-createFunDeclare _ def = def
+addChild :: GraphNode -> GraphNode -> GraphNode
+addChild (DefNode name children) newChild  = DefNode name (newChild:children)
+addChild (UseNode s uses children) newChild = UseNode s uses (newChild:children)
 
 createDefMap :: GraphNode -> M.Map String GraphNode -> M.Map String GraphNode
 createDefMap def@(DefNode name children) defMap  = M.insert name def childMap
@@ -47,16 +40,27 @@ createDefMap (UseNode _ _ children) defMap = foldr createDefMap defMap children
 createDefMap _ defMap = defMap
 
 createUseArray :: GraphNode -> [GraphNode] -> [GraphNode]
+createUseArray (UseNode _ [] children) useArray  = foldr createUseArray useArray children
+createUseArray (DefNode _ children) useArray = foldr createUseArray useArray children
 createUseArray (UseNode s uses children) useArray  = (UseNode s uses []):childArray
   where childArray = foldr createUseArray useArray children
-createUseArray (DefNode _ children) useArray = foldr createUseArray useArray children
 createUseArray _ useArray = useArray
 
+
+printSpan :: Span -> String
+printSpan :: Span -> String
+
+createDefPath :: GraphNode -> [String]
+createDefPath (UseNode span uses children) = (printSpan span):(subPaths)
+  where
+      subPaths = concat $ fmap ( fmap ((printSpan span ++ "->") ++) . createDefPath) children
+createDefPath _ = []
+
 createUsePath :: M.Map String GraphNode -> GraphNode -> [String]
-createUsePath defMap (UseNode span uses _) = (show span):(concat $ fmap createPath uses)
+createUsePath defMap (UseNode span uses _) = concat $ fmap createPath uses
   where
     createPath use = case M.lookup use defMap of
-      Just (DefNode _ children) -> concat $ fmap (\x -> fmap (\y -> (show span) ++ "->" ++ y) $ createUsePath defMap x) children
+      Just (DefNode _ children) -> createDefPath (UseNode span uses children)
       _ -> []
 createUsePath _ _ = []
 
@@ -66,8 +70,12 @@ createDefUsePath node = concat $ fmap (createUsePath defMap) useArray
     defMap = createDefMap node M.empty
     useArray = createUseArray node []
 
+convertToGraphNodeInit :: AG.AST -> GraphNode
+convertToGraphNodeInit ast = convertToGraphNode ast (DefNode "" [])
+
 analyze :: String -> IO (String)
 analyze file = do 
   asts <- AG.loadAST file
-  return $ L.intercalate "\n" $ concat $ fmap (createDefUsePath . convertToGraphNode) asts
+  --return $ show $ fmap (convertToGraphNodeInit) asts
+  return $ L.intercalate "\n" $ concat $ fmap (createDefUsePath . convertToGraphNodeInit) asts
   --return $ show $ concat $ fmap ((\x -> createUseArray x []) . convertToGraphNode) asts

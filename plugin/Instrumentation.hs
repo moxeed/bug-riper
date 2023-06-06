@@ -35,6 +35,7 @@ import qualified GHC.Tc.Utils.Zonk as GHC
 import qualified GHC.Tc.Solver.Monad as SM
 import qualified GHC.Tc.Solver as GHC
 import qualified GHC.Tc.Gen.Expr as GHC
+import qualified GHC.Parser.Annotation as GHC
 
 import qualified GHC.Core.Utils as CoreUtils
 
@@ -77,15 +78,12 @@ addMatchTrace other =
   return other
 
 injectTrace :: GHC.LHsExpr GHC.GhcTc -> GHC.TcM (GHC.LHsExpr GHC.GhcTc)
-injectTrace expr@(GHC.L loc _) = do
+injectTrace expr@(GHC.L GHC.SrcSpanAnn{GHC.locA=(GHC.RealSrcSpan loc _)} _) = do
   Just exprT <-
     typeOfExpr expr
 
   let 
-    ppWhere =
-      GHC.renderWithContext 
-      GHC.defaultSDocContext
-      ( GHC.ppr loc )
+    ppWhere = show loc
 
   Right traceExprPs <-
         fmap ( GHC.convertToHsExpr GHC.Generated GHC.noSrcSpan )
