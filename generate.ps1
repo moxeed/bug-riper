@@ -9,7 +9,7 @@ Remove-Item *.out | Out-Null
 New-Item ./cummulative.run.out | Out-Null
 
 Write-Output "G2 Started"
-$tests = (G2 --max-outputs 100 $file $function)
+$tests = (G2 --max-outputs 10 $file $function)
 Write-Output "G2 Finished"
 $totalBest = 0
 
