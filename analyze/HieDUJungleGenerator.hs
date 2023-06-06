@@ -2,9 +2,13 @@ module HieDUJungleGenerator
 where
 
 import GHC.Iface.Ext.Types
+import Text.Regex
 import qualified Data.Map as M
 import qualified Data.List as L
+import qualified Data.List.Extra as L
 import qualified HieASTGraphGenerator as AG
+import qualified GHC.Utils.Outputable as GHC
+
 
 data GraphNode = DefNode String [GraphNode] | UseNode Span [String] [GraphNode]
   deriving (Show)
@@ -19,11 +23,11 @@ convertToGraphNode (AG.AST _ "FunBind" children _) (DefNode name nodeChildren) =
 
 convertToGraphNode (AG.AST _ "HsVar" _      [name]) (UseNode s uses children) = UseNode s (name:uses) children 
 convertToGraphNode (AG.AST s "HsIf"  [cond, first@(AG.AST fs _ _ _), second@(AG.AST ss _ _ _)] _ ) graphNode = 
-  addChild graphNode condNode
+  addChild (addChild condNode firstNode) secondNode
   where 
     firstNode  = convertToGraphNode first  (UseNode fs [] [])
     secondNode = convertToGraphNode second (UseNode ss [] [])
-    condNode = convertToGraphNode cond (UseNode s [] [firstNode, secondNode])
+    condNode = convertToGraphNode cond graphNode
     
 convertToGraphNode (AG.AST _ "GRHS"  [child@(AG.AST s _ _ _)]  _   ) graphNode = addChild graphNode (convertToGraphNode child (UseNode s [] []))
 convertToGraphNode (AG.AST _ _     children _   )   graphNode = foldr convertToGraphNode graphNode children
@@ -45,10 +49,12 @@ createUseArray (UseNode s uses children) useArray  = (UseNode s uses []):childAr
   where childArray = foldr createUseArray useArray children
 createUseArray _ useArray = useArray
 
+    
 createDefPath :: GraphNode -> [String]
-createDefPath (UseNode span uses children) = (show span):(subPaths)
+createDefPath (UseNode span uses children) = (ppWhere):(subPaths)
   where
-      subPaths = concat $ fmap ( fmap ((show span ++ "->") ++) . createDefPath) children
+      subPaths = concat $ fmap ( fmap ((ppWhere ++ "->") ++) . createDefPath) children
+      ppWhere = GHC.renderWithContext GHC.defaultSDocContext ( GHC.ppr span )
 createDefPath _ = []
 
 createUsePath :: M.Map String GraphNode -> GraphNode -> [String]
@@ -72,6 +78,18 @@ uniq:: [String] -> [String]
 uniq (a:ax) = if elem a ax then uniq ax else a:(uniq ax)
 uniq [] = []
 
+analyzePath :: String -> String -> String
+analyzePath trace path = 
+  case matchRegex (mkRegex regexString) trace of
+       Just _ -> "\ESC[32mCovered: " ++ path
+       _ -> "\ESC[31mNotCovered: " ++ path
+  where 
+    regexString = L.replace "->" ".*"  rParReplace
+    rParReplace = L.replace ")" "[)]" lParReplace
+    lParReplace = L.replace "(" "[(]" slashReplace
+    slashReplace = L.replace "\\" "[\\]" path
+
+
 analyze :: String -> String -> IO (String)
 analyze file runFile = do 
   asts <- AG.loadAST file
@@ -79,4 +97,5 @@ analyze file runFile = do
   let 
     duPath = uniq $ concat $ fmap (createDefUsePath . convertToGraphNodeInit) asts
     trace = L.intercalate "->" (lines runData)
-  return $ L.intercalate "\n" $ fmap (\x -> (if L.isInfixOf x trace then "\ESC[32mCovered: " else "\ESC[31mNotCovered: ") ++ x ) duPath
+  return $ L.intercalate "\n" $ fmap (analyzePath trace) duPath
+    
