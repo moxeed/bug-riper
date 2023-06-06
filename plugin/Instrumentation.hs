@@ -88,7 +88,10 @@ injectTrace expr@(GHC.L GHC.SrcSpanAnn{GHC.locA=(GHC.RealSrcSpan loc _)} _) = do
     typeOfExpr expr
 
   let 
-    ppWhere = show loc
+    ppWhere =
+      GHC.renderWithContext 
+      GHC.defaultSDocContext
+      ( GHC.ppr loc )
 
   Right traceExprPs <-
         fmap ( GHC.convertToHsExpr GHC.Generated GHC.noSrcSpan )
