@@ -19,7 +19,10 @@ z''' a = case a of
     2 -> 3
     _ -> 0
 
-
+fib :: Int -> Int
+fib 1 = 1
+fib 2 = 1
+fib n = fib (n - 1) + fib (n - 2)
 --Cannot Do This Therefore All of Function Declarations Are In Same Fun Bind Block
 --z'' 4 = 5
 --z'  1 = 5

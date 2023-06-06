@@ -51,7 +51,9 @@ createUseArray _ useArray = useArray
 
     
 createDefPath :: GraphNode -> [String]
-createDefPath (UseNode span uses children) = (ppWhere):(subPaths)
+createDefPath (UseNode span uses children) = case children of
+    [] -> (ppWhere):(subPaths)
+    _  -> subPaths
   where
       subPaths = concat $ fmap ( fmap ((ppWhere ++ "->") ++) . createDefPath) children
       ppWhere = GHC.renderWithContext GHC.defaultSDocContext ( GHC.ppr span )
@@ -89,7 +91,6 @@ analyzePath trace path =
     lParReplace = L.replace "(" "[(]" slashReplace
     slashReplace = L.replace "\\" "[\\]" path
 
-
 analyze :: String -> String -> IO (String)
 analyze file runFile = do 
   asts <- AG.loadAST file
@@ -97,5 +98,5 @@ analyze file runFile = do
   let 
     duPath = uniq $ concat $ fmap (createDefUsePath . convertToGraphNodeInit) asts
     trace = L.intercalate "->" (lines runData)
-  return $ L.intercalate "\n" $ fmap (analyzePath trace) duPath
+  return $ (L.intercalate "\n" $ fmap (analyzePath trace) duPath) ++ "\n"
     

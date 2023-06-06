@@ -21,3 +21,4 @@ Only Runs On GHC 8.2.2
 If You Want to Use Multiple GHC Version Specify The Version Using -W Option In Cabal This Option Should Be Provided With The Path of Your GHC Version
 
 cabal install g2 -w D:\ghc\ghc-8.2.2\bin\ghc.exe --constraint 'liquid-fixpoint < 0.8.10'
+Add G2 To Path Variable
