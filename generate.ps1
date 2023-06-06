@@ -8,7 +8,7 @@ param(
 Remove-Item *.out | Out-Null
 New-Item ./cummulative.run.out | Out-Null
 
-$tests = (.\G2.exe $file $function)
+$tests = (G2 $file $function)
 $totalBest = 0
 
 while (1) {
