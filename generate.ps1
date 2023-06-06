@@ -11,15 +11,21 @@ New-Item ./cummulative.run.out | Out-Null
 $tests = (G2 $file $function)
 $totalBest = 0
 
+Copy-Item .\src\MainTemple.hs .\src\Main.hs | Out-Null
+foreach ($test in $tests) {
+    $testId = ($test -replace "=.*", "")
+    Add-Content .\src\Main.hs "run ""$testId"" = show $ $testId" 
+}
+
 while (1) {
 
     $best = 0
     $bestTest = ""
     foreach ($test in $tests) {
-        (Get-Content .\src\MainTemple.hs) -replace "%test%", ($test -replace "=.*", "") | Set-Content .\src\Main.hs
         Copy-Item ./cummulative.run.out ./run.out | Out-Null
 
-        cabal run bug-riper | Out-Null
+        $testId = ($test -replace "=.*", "")
+        cabal run bug-riper -- $testId | Out-Null
         $covered = cabal.exe run analyze -- --ju $hieFile ./run.out |
             Select-String -Pattern "NotCovered:" -NotMatch
 
