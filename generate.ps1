@@ -8,7 +8,9 @@ param(
 Remove-Item *.out | Out-Null
 New-Item ./cummulative.run.out | Out-Null
 
-$tests = (G2 $file $function)
+Write-Output "G2 Started"
+$tests = (G2 --max-outputs 100 $file $function)
+Write-Output "G2 Finished"
 $totalBest = 0
 
 Copy-Item .\src\MainTemple.hs .\src\Main.hs | Out-Null

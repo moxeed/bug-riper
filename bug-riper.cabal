@@ -60,10 +60,13 @@ library main-lib
         BasicSum
         DUEffect
         Sample
+        Coverage
         SortingNetwork
     hs-source-dirs: lib
     build-depends: 
-        base ^>=4.17
+        base ^>=4.17,
+        transformers,
+        containers
     default-language: Haskell2010
 
 library plugin-lib
