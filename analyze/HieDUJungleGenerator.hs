@@ -29,8 +29,11 @@ convertToGraphNode (AG.AST s "HsIf"  [cond, first@(AG.AST fs _ _ _), second@(AG.
     secondNode = convertToGraphNode second (UseNode ss [] [])
     condNode = convertToGraphNode cond graphNode
     
-convertToGraphNode (AG.AST _ "GRHS"  [child@(AG.AST s _ _ _)]  _   ) graphNode = addChild graphNode (convertToGraphNode child (UseNode s [] []))
-convertToGraphNode (AG.AST _ _     children _   )   graphNode = foldr convertToGraphNode graphNode children
+convertToGraphNode (AG.AST _ "GRHS"  children  _   ) graphNode = addChild graphNode newNode
+  where 
+    (AG.AST s _ _ _) = last children
+    newNode = foldr convertToGraphNode (UseNode s [] []) children
+convertToGraphNode (AG.AST _ _     children  _  )   graphNode = foldr convertToGraphNode graphNode children
 
 addChild :: GraphNode -> GraphNode -> GraphNode
 addChild (DefNode name children) newChild  = DefNode name (newChild:children)
@@ -98,5 +101,8 @@ analyze file runFile = do
   let 
     duPath = uniq $ concat $ fmap (createDefUsePath . convertToGraphNodeInit) asts
     trace = L.intercalate "->" (lines runData)
+    node = convertToGraphNodeInit $ head asts
+    defMap = createDefMap node M.empty
   return $ (L.intercalate "\n" $ fmap (analyzePath trace) duPath) ++ "\n"
+  --return (show (defMap M.! "enqueueOrder'"))
     
