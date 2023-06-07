@@ -6,6 +6,7 @@ main :: IO()
 main = print $ show tests
 
 tests = [
-    fib 4 
-   ,fib 3 
+    g 5 0 
+   ,g 6 1 
+   ,g 4 0 
     ]
