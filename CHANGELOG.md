@@ -22,3 +22,4 @@ If You Want to Use Multiple GHC Version Specify The Version Using -W Option In C
 
 cabal install g2 -w D:\ghc\ghc-8.2.2\bin\ghc.exe --constraint 'liquid-fixpoint < 0.8.10'
 Add G2 To Path Variable
+

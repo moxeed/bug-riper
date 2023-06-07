@@ -8,7 +8,7 @@ Remove-Item *.out | Out-Null
 New-Item ./cummulative.run.out | Out-Null
 
 Write-Output "G2 Started"
-$tests = (G2 --max-outputs 10 $file $function)
+$tests = (G2 $file $function)
 Write-Output "G2 Finished"
 
 Copy-Item .\src\MainTemple.hs .\src\Main.hs
@@ -16,6 +16,7 @@ Copy-Item .\src\SuitTemple.hs .\src\TestSuite.hs
 
 foreach ($test in $tests) {
     $testId = ($test -replace "=.*", "")
+    Write-Output $testId
     Add-Content .\src\Main.hs "run ""$testId"" = show $ $testId" 
 }
 
