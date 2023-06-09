@@ -28,3 +28,5 @@ Add G2 To Path Variable
 GHC Optimization Can Handle Some Constant Values, Therefore Causing CFG Output To Be Incorrect
 We Sould Disable This Options by Setting -O0 Flag In GHC Build
 
+[Optimization Documents Reference](https://downloads.haskell.org/ghc/latest/docs/users_guide/using-optimisation.html)
+
