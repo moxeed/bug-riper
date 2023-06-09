@@ -47,3 +47,4 @@ foreach ($test in $tests) {
 
 Add-Content .\src\TestSuite.hs "    ]"
 Copy-Item .\src\TestSuite.hs .\src\Main.hs
+Remove-Item .\src\TestSuite.hs
