@@ -14,6 +14,7 @@ common instrumentation
     ghc-options: -fwrite-ide-info
                  -hiedir=.hie
                  -Wall 
+                 -O0
                  --fhpc
                  -fplugin=Instrumentation
     build-depends: plugin-lib
@@ -28,7 +29,8 @@ executable bug-riper
     main-is:          Main.hs
     build-depends:
         base ^>=4.17,
-        main-lib
+        main-lib,
+        deepseq
     hs-source-dirs:   
         src
         app
@@ -52,6 +54,17 @@ executable analyze
         regex-compat
     hs-source-dirs:   
         analyze
+    default-language: Haskell2010
+
+executable generator
+    import:           warnings
+    main-is:          Main.hs
+    other-modules:
+    build-depends:
+        base ^>=4.17,
+        QuickCheck
+    hs-source-dirs:   
+        generator
     default-language: Haskell2010
 
 library main-lib

@@ -16,14 +16,17 @@ Copy-Item .\src\SuitTemple.hs .\src\TestSuite.hs
 
 foreach ($test in $tests) {
     $testId = ($test -replace "=.*", "")
-    Write-Output $testId
     Add-Content .\src\Main.hs "run ""$testId"" = show $ $testId" 
 }
 
 $best = 0
 foreach ($test in $tests) {
     $testId = ($test -replace "=.*", "")
+
+    Write-Output "Checking: $testId"
+
     cabal run bug-riper -- $testId | Out-Null
+    cabal.exe run analyze -- --ju $hieFile ./run.out 
     $covered = cabal.exe run analyze -- --ju $hieFile ./run.out |
         Select-String -Pattern "NotCovered:" -NotMatch
 

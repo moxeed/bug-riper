@@ -1,5 +1,8 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
+
+#define traceLoc trace (__FILE__ ++":"++ show __LINE__)
 
 module Instrumentation ( plugin ) where
 
