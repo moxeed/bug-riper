@@ -19,7 +19,9 @@ convertToGraphNode (AG.AST _ "VarPat"  _ [name]  ) (DefNode defName children) = 
 
 convertToGraphNode (AG.AST _ ""        _ [name]  ) (DefNode _ children) = DefNode name children
 convertToGraphNode (AG.AST _ "FunBind" children _) (DefNode name nodeChildren) = DefNode name (funcNode:nodeChildren)
-  where funcNode = foldr convertToGraphNode (DefNode "" []) children
+  where funcNode = foldr grhsSkipper (DefNode "" []) children
+        grhsSkipper (AG.AST _ "GRHS"  ghrsChildren  _   ) graphNode = foldr convertToGraphNode graphNode ghrsChildren
+        grhsSkipper ast graphNode = convertToGraphNode ast graphNode
 
 convertToGraphNode (AG.AST _ "HsVar" _      [name]) (UseNode s uses children) = UseNode s (name:uses) children 
 convertToGraphNode (AG.AST s "HsIf"  [cond, first@(AG.AST fs _ _ _), second@(AG.AST ss _ _ _)] _ ) graphNode = 

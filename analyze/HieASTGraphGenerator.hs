@@ -15,7 +15,7 @@ import Debug.Trace
 data AST = AST Span String [AST] [String]
   deriving (Show)
 
-importantNodes = ["HsIf", "FunBind", "HsVar", "HsOverLit", "HsCase", "VarPat"]
+importantNodes = ["HsIf", "FunBind", "HsVar", "HsOverLit", "HsCase", "VarPat", "HsLam"]
 showNodes = ["HsIf", "FunBind", "HsVar", "HsOverLit", "HsCase", "VarPat", "NPat", "WildPat", "HsApp", "ConPat"]
 trimNodes = ["TypeSig"]
 
@@ -38,6 +38,13 @@ getType [] = ""
 getType ax = if length importantTypes > 0 
     then head importantTypes 
     else head types
+  where 
+    types = fmap (unpackFS . nodeAnnotConstr) ax
+    importantTypes = L.intersect types importantNodes
+  
+getTypes :: [NodeAnnotation] -> String
+getTypes [] = ""
+getTypes ax = show types
   where 
     types = fmap (unpackFS . nodeAnnotConstr) ax
     importantTypes = L.intersect types importantNodes

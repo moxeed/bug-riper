@@ -61,6 +61,7 @@ library main-lib
         BasicSum
         DUEffect
         Sample
+        Sample1
         Coverage
         SortingNetwork
     hs-source-dirs: lib
