@@ -8,7 +8,7 @@ Remove-Item *.out | Out-Null
 New-Item ./cummulative.run.out | Out-Null
 
 Write-Output "G2 Started"
-$tests = (G2 --time 16 --max-outputs 32  $file $function)
+$tests = (G2 --n 400 --max-outputs 32  $file $function)
 Write-Output "G2 Finished"
 
 Copy-Item .\src\MainTemple.hs .\src\Main.hs

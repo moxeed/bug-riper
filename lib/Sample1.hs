@@ -1,12 +1,12 @@
 module Sample1 
 where
-    
+
 smallerEq :: Int -> [Int] -> [Int]
 smallerEq = \v -> \list ->
     case list of
         [] -> []
-        x:xs | x<=v -> x:smallerEq 1 xs
-        _:xs -> smallerEq (v + 1) xs
+        x:xs | x<=v -> x:smallerEq v xs
+        _:xs -> smallerEq v xs
 
 -- Return the list which contains elements greater than the specified element
 greater :: Int -> [Int] -> [Int]

@@ -9,17 +9,18 @@ import qualified Data.List.Extra as L
 import qualified HieASTGraphGenerator as AG
 import qualified GHC.Utils.Outputable as GHC
 
+import Debug.Trace
+
 
 data GraphNode = DefNode String [GraphNode] | UseNode Span [String] [GraphNode]
   deriving (Show)
 
 convertToGraphNode :: AG.AST -> GraphNode -> GraphNode
-
 convertToGraphNode (AG.AST _ "VarPat"  _ [name]  ) (DefNode defName children) = DefNode defName ((DefNode name []):children)
 
-convertToGraphNode (AG.AST _ ""        _ [name]  ) (DefNode _ children) = DefNode name children
+convertToGraphNode (AG.AST s ""        _ [name]  ) (DefNode _ children) = (DefNode name children)
 convertToGraphNode (AG.AST _ "FunBind" children _) (DefNode name nodeChildren) = DefNode name (funcNode:nodeChildren)
-  where funcNode = foldr grhsSkipper (DefNode "" []) children
+  where funcNode = foldr convertToGraphNode (DefNode "" []) children
         grhsSkipper (AG.AST _ "GRHS"  ghrsChildren  _   ) graphNode = foldr convertToGraphNode graphNode ghrsChildren
         grhsSkipper ast graphNode = convertToGraphNode ast graphNode
 
@@ -35,7 +36,7 @@ convertToGraphNode (AG.AST _ "GRHS"  children  _   ) graphNode = addChild graphN
   where 
     (AG.AST s _ _ _) = last children
     newNode = foldr convertToGraphNode (UseNode s [] []) children
-convertToGraphNode (AG.AST _ _     children  _  )   graphNode = foldr convertToGraphNode graphNode children
+convertToGraphNode (AG.AST s _     children  _  )   graphNode =  (foldr convertToGraphNode graphNode children)
 
 addChild :: GraphNode -> GraphNode -> GraphNode
 addChild (DefNode name children) newChild  = DefNode name (newChild:children)
@@ -60,16 +61,20 @@ createDefPath (UseNode span uses children) = case children of
     [] -> (ppWhere):(subPaths)
     _  -> subPaths
   where
-      subPaths = concat $ fmap ( fmap ((ppWhere ++ "->") ++) . createDefPath) children
+      subPaths = if isUseless 
+        then concat $ fmap createDefPath children
+        else concat $ fmap ( fmap ((ppWhere ++ "->") ++) . createDefPath) children
       ppWhere = GHC.renderWithContext GHC.defaultSDocContext ( GHC.ppr span )
+      isUseless = length children == 1
 createDefPath _ = []
 
 createUsePath :: M.Map String GraphNode -> GraphNode -> [String]
 createUsePath defMap (UseNode span uses _) = concat $ fmap createPath uses
   where
     createPath use = case M.lookup use defMap of
-      Just (DefNode _ children) -> createDefPath (UseNode span uses children)
+      Just (DefNode _ children) -> fmap ((ppWhere ++ "->") ++) $ createDefPath (UseNode span uses children)
       _ -> []
+    ppWhere = GHC.renderWithContext GHC.defaultSDocContext ( GHC.ppr span )
 createUsePath _ _ = []
 
 createDefUsePath :: GraphNode -> [String]

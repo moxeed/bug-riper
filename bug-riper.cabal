@@ -61,6 +61,7 @@ library main-lib
         BasicSum
         DUEffect
         Sample
+        ME
         Sample1
         Coverage
         SortingNetwork

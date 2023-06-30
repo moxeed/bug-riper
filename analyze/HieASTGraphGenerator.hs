@@ -15,7 +15,7 @@ import Debug.Trace
 data AST = AST Span String [AST] [String]
   deriving (Show)
 
-importantNodes = ["HsIf", "FunBind", "HsVar", "HsOverLit", "HsCase", "VarPat", "HsLam"]
+importantNodes = ["HsIf", "FunBind", "HsVar", "HsOverLit", "HsCase", "VarPat", "HsLam", "Match"]
 showNodes = ["HsIf", "FunBind", "HsVar", "HsOverLit", "HsCase", "VarPat", "NPat", "WildPat", "HsApp", "ConPat"]
 trimNodes = ["TypeSig"]
 
@@ -47,7 +47,6 @@ getTypes [] = ""
 getTypes ax = show types
   where 
     types = fmap (unpackFS . nodeAnnotConstr) ax
-    importantTypes = L.intersect types importantNodes
 
 createAst :: HieAST a -> AST
 createAst ast = if shouldTrim then AST codeSpan nodeType [] contextStrings
