@@ -21,7 +21,6 @@ common instrumentation
 
 common warnings
     ghc-options: -fwrite-ide-info
-                 -hiedir=.hie
                  -Wall 
                  --fhpc
 
@@ -50,7 +49,8 @@ executable analyze
         ghc-paths,
         mtl,
         extra,
-        regex-compat
+        regex-compat,
+        directory
     hs-source-dirs:   
         analyze
     default-language: Haskell2010
@@ -58,13 +58,12 @@ executable analyze
 library main-lib
     import: instrumentation
     exposed-modules: 
-        BasicSum
         DUEffect
         Sample
-        ME
         Sample1
-        Coverage
-        SortingNetwork
+        ME
+        A
+        B
     hs-source-dirs: lib
     build-depends: 
         base ^>=4.17,

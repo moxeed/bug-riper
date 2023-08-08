@@ -1,6 +1,7 @@
 module HieDUJungleGenerator
 where
 
+import System.Directory
 import GHC.Iface.Ext.Types
 import Text.Regex
 import qualified Data.Map as M
@@ -102,14 +103,15 @@ analyzePath trace path =
     slashReplace = L.replace "\\" "[\\]" path
 
 analyze :: String -> String -> IO (String)
-analyze file runFile = do 
-  asts <- AG.loadAST file
+analyze hieDir runFile = do
+  files <- getDirectoryContents hieDir
+  let 
+    hieFiles = filter (L.isSuffixOf ".hie") files
+  asts <- mapM (\f -> AG.loadAST (hieDir ++ "\\" ++ f))  hieFiles
   runData <- readFile runFile
   let 
-    duPath = uniq $ concat $ fmap (createDefUsePath . convertToGraphNodeInit) asts
+    concatedAsts = concat asts
+    graphNodes = fmap convertToGraphNodeInit concatedAsts
+    duPath = uniq $ createDefUsePath (DefNode "ALL" graphNodes)
     trace = L.intercalate "->" (lines runData)
-    node = convertToGraphNodeInit $ head asts
-    defMap = createDefMap node M.empty
   return $ (L.intercalate "\n" $ fmap (analyzePath trace) duPath) ++ "\n"
-  --return (show (defMap M.! "enqueueOrder'"))
-    
