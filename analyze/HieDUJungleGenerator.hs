@@ -73,7 +73,7 @@ createUsePath :: M.Map String GraphNode -> GraphNode -> [String]
 createUsePath defMap (UseNode span uses _) = concat $ fmap createPath uses
   where
     createPath use = case M.lookup use defMap of
-      Just (DefNode _ children) -> fmap ((ppWhere ++ "->") ++) $ createDefPath (UseNode span uses children)
+      Just (DefNode _ children) -> createDefPath (UseNode span uses children)
       _ -> []
     ppWhere = GHC.renderWithContext GHC.defaultSDocContext ( GHC.ppr span )
 createUsePath _ _ = []
