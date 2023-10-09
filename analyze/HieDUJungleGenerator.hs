@@ -102,6 +102,17 @@ analyzePath trace path =
     lParReplace = L.replace "(" "[(]" slashReplace
     slashReplace = L.replace "\\" "[\\]" path
 
+analyzeCoverage :: String -> String -> Bool
+analyzeCoverage trace path = 
+  case matchRegex (mkRegex regexString) trace of
+       Just _ -> True
+       _ -> False
+  where 
+    regexString = L.replace "->" ".*"  rParReplace
+    rParReplace = L.replace ")" "[)]" lParReplace
+    lParReplace = L.replace "(" "[(]" slashReplace
+    slashReplace = L.replace "\\" "[\\]" path
+
 analyze :: String -> String -> IO (String)
 analyze hieDir runFile = do
   files <- getDirectoryContents hieDir
@@ -115,3 +126,20 @@ analyze hieDir runFile = do
     duPath = uniq $ createDefUsePath (DefNode "ALL" graphNodes)
     trace = L.intercalate "->" (lines runData)
   return $ (L.intercalate "\n" $ fmap (analyzePath trace) duPath) ++ "\n"
+
+coverage :: String -> String -> IO (Int, Int)
+coverage hieDir runFile = do
+  files <- getDirectoryContents hieDir
+  let 
+    hieFiles = filter (L.isSuffixOf ".hie") files
+  asts <- mapM (\f -> AG.loadAST (hieDir ++ "\\" ++ f))  hieFiles
+  runData <- readFile runFile
+  let 
+    concatedAsts = concat asts
+    graphNodes = fmap convertToGraphNodeInit concatedAsts
+    duPath = uniq $ createDefUsePath (DefNode "ALL" graphNodes)
+    trace = L.intercalate "->" (lines runData)
+    coverageData = fmap (analyzeCoverage trace) duPath
+    totalCount = length coverageData
+    passedCount = length $ filter (== True) coverageData
+  return (totalCount, passedCount)

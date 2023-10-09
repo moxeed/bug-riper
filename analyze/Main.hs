@@ -13,7 +13,7 @@ parse ["-h"] = usage   >> exit
 parse ["-v"] = version >> exit
 parse ["--ast", file] = AG.printAsts file
 parse ["--du" , file] = DU.analyze file
-parse ["--ju" , file, runFile] = JU.analyze file runFile
+parse ["--ju" , file, runFile] = JU.coverage file runFile >>= (\(total, passed) -> return $ "Total: " ++ (show total) ++ "Passed: " ++ (show passed))
 parse [] = usage >> exit
 
 usage :: IO()
